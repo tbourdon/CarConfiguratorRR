@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+ 
+<html>
+ 
+    <head>
+        <title>Video Test</title>
+        <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    </head>
+     
+    <script type="text/javascript" src="javaScript/cc_utils.js"></script>
+    <script type="text/javascript" src="javaScript/cc_mouse.js"></script>
+    
+    <script type="text/javascript">
+    	var mouse_down=false;
+    	var zoom = -8.0;
+	    var image = new Image();
+		var base64ImageString;
+		var context;
+
+		var connection = new WebSocket('ws://localhost:8787', 'json');
+		
+		connection.onopen = function () {
+		  console.info('Connection Opened');
+		  
+		};
+		connection.onerror = function (error) {
+		  console.info('WebSocket Error ' + error);
+		};
+		//Wenn Message e ankommt
+		connection.onmessage = function (msg) {
+			console.info("irgende Message kommt an!");
+			
+		  if(msg.data.indexOf("subProtocol")==-1)
+		    document.getElementById("rr_canvas").innerHTML=msg.data+"<br/>";
+		  
+		  //Wenn der vom Server gesendete String mit /9 beginnt
+		  //ist es ein Binärer String und wird sodann dem bas64STring
+		  //übergeben, welcher die Quelle für das Bild darstellt
+		   if((msg.data).indexOf("/9")==-1 ){
+  			//   console.info("String mit /9 erhalten!");
+  			//   console.info("Message contains /9: "+msg.data);
+		   }
+		  //console.info("String enthält kein /9");
+		  //console.info("Message without /9: "+msg.data);
+		  base64ImageString = msg.data;
+		  //console.info("base64imagestring: "+base64ImageString);
+		  renderImage();
+
+		
+		};
+		function sendMessage(msg){
+		  connection.send(msg);
+		};
+	
+    
+    
+
+/*
+	 * 		Mouse Events
+	 */
+	function mouseWheel(wheelEreignis){
+		cc_mouse.mouseWheel(wheelEreignis);
+	} 
+	function mouseMove(ereignis){
+		cc_mouse.mouseMove(ereignis);
+	}
+	function mouseDown(ereignis){
+		cc_mouse.mouseDown(ereignis);
+	}
+	function mouseUp(ereignis){
+		cc_mouse.mouseUp(ereignis);
+	}
+	function keyDown(ereignis){
+		cc_mouse.keyDown(ereignis);
+	}
+	
+	function renderImage(){
+			try {
+			image.src = "data:image/jpg;base64,"+base64ImageString;
+    		context.drawImage(image, 0, 0, image.width, image.height);
+   		} catch (e) {
+    	if (e.name == "NS_ERROR_NOT_AVAILABLE") {
+      	// Wait a bit before trying again; you may wish to change the
+      	// length of this delay.
+      		setTimeout(renderImage, 100);
+    	} 
+    		else {
+      			throw e;
+    		}
+  		}
+	};
+
+    window.onload = function(){
+    	var video = document.getElementById("rr_canvas");
+    	
+    	//var canvas = document.getElementById('rr_canvas');
+		context = video.getContext('2d');
+		
+		//};
+		//image.onerror = function(e){
+		//	console.log('Error during loading image: ',e);
+		//};
+		
+		
+    	//Tastatur
+		//document.onkeypress = processKey;
+		//Funkionenzuweisung f�r Maus-Events im Canvas-Bereich
+		video.onmousedown=mouseDown;
+		video.onmouseup=mouseUp;
+		video.onmousemove=mouseMove;
+		video.onkeydown=keyDown;
+		video.onkeypress = keyDown;
+		video.addEventListener('DOMMouseScroll', mouseWheel, false);
+		video.addEventListener('mousewheel', mouseWheel);
+		video.addEventListener('touchmove', cc_utils.onTouchMove);
+		
+		
+		
+		//renderImage();
+		
+		
+		
+		
+    };
+    </script>
+    
+    
+     
+    <body>
+    
+    <div class="videowindow" align="center">
+	      
+	    <canvas id="rr_canvas" width="720px" height="480px" >
+    		
+    	</canvas>
+	      
+    </div>
+    
+    	
+   
+    
+    </body>
+ 
+</html>
